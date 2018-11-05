@@ -1,0 +1,98 @@
+// Tesztkomment
+#include <iostream>
+#include <sstream>
+#include <vector>
+#include <random>
+
+struct ghost_struct{
+    std::string name;
+    int x; // Pozicio
+    int y; // Pozicio
+    int edible; // Ameddig meg
+    int immobile; // meddig meg
+};
+
+struct Reader {
+    // TODO hat ennel lehetne szebb is :)
+    int data[3];
+    std::vector<std::vector<char>> fields;
+    std::vector<std::vector<std::string>> pacmans;
+    std::vector<std::vector<std::string>> ghosts;
+    
+    std::vector<ghost_struct> ghost_vector; // Strukturalt adatok a szellemekrol
+    //std::vector<std::pair<int,int>> boosters;
+
+    Reader(std::istream& input) {
+        std::string line;
+        std::getline(input, line);
+        std::stringstream(line) >> data[0] >> data[1] >> data[2];
+        std::getline(input, line);
+        
+        int X, Y, pacmanCount, ghostCount;
+        std::stringstream second(line);
+        second >> X >> Y >> pacmanCount >> ghostCount;
+        if (std::getline(second, line))
+            std::cerr << "\nGot message:" << line << std::endl;
+            
+        fields.resize(X, std::vector<char>(Y));
+        for (auto& fieldLine : fields) {
+            std::getline(input, line);
+            std::copy(line.begin(), line.begin() + Y, fieldLine.begin());
+        }
+        
+        pacmans.resize(pacmanCount);
+        for (auto& pacman : pacmans) {
+            std::getline(input, line);
+            std::stringstream ss(line);
+            while(std::getline(ss, line, ' '))
+                pacman.push_back(line);
+        }
+
+        ghosts.resize(ghostCount);
+        for (auto& ghost : ghosts) {
+            std::getline(input, line);
+            std::stringstream ss(line);
+            std::stringstream ss2(line);
+            while(std::getline(ss, line, ' '))
+                ghost.push_back(line);
+            
+            ghost_struct g;
+            std::getline(ss2, line, ' ');
+            g.name = line;
+            std::getline(ss2, line, ' ');
+            g.y = std::stoi(line);
+            std::getline(ss2, line, ' ');
+            g.x = std::stoi(line);
+            std::getline(ss2, line, ' ');
+            g.edible = std::stoi(line);
+            std::getline(ss2, line, ' ');
+            g.immobile = std::stoi(line);
+            ghost_vector.push_back(g);
+        }
+    }
+};
+
+std::string possibles = "v<>^";
+
+int main(int argc, char** argv) {
+    std::default_random_engine generator(std::random_device{}());
+    std::uniform_int_distribution<int> distribution(0,possibles.size()-1);
+
+    while (true) {
+        Reader reader(std::cin);
+        
+        if (reader.data[2] == -1)
+            break;
+        
+        // TODO logika jobb mint a random
+        char dir = possibles[distribution(generator)];
+        
+        // Ha szeretnetek debug uzenetet kuldeni, akkor megtehetitek.
+        // Vigyazzatok, mert maximalisan csak 1024 * 1024 bajtot kaptok vissza
+        std::cerr << dir;
+        
+        // standard out-ra meg mehet ki a megoldas! Mas ne irodjon ide ki ;)
+        std::cout << reader.data[0] << " " << reader.data[1] << " " 
+            << reader.data[2] << " " << dir << std::endl;
+    }
+}
