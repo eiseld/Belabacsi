@@ -4,6 +4,17 @@
 #include <vector>
 #include <random>
 
+struct pm_struct{
+    int id;
+    std::string name;
+    int x; // Pozicio
+    int y; // Pozicio
+    int fast; // Ameddig meg
+    int points;
+    std::string extra_points;
+    std::string prev_actions;
+};
+
 struct ghost_struct{
     std::string name;
     int x; // Pozicio
@@ -20,7 +31,10 @@ struct Reader {
     std::vector<std::vector<std::string>> ghosts;
     
     std::vector<ghost_struct> ghost_vector; // Strukturalt adatok a szellemekrol
-    //std::vector<std::pair<int,int>> boosters;
+    std::vector<pm_struct> pacman_vector; // Strukturalt adatok a pacmanekrol
+    std::vector<std::pair<int,int>> boosters;
+    std::vector<std::pair<int,int>> foods;
+    std::vector<std::vector<int>> map; // Jarhato ut 0, akadaly 1
 
     Reader(std::istream& input) {
         std::string line;
@@ -35,17 +49,59 @@ struct Reader {
             std::cerr << "\nGot message:" << line << std::endl;
             
         fields.resize(X, std::vector<char>(Y));
+        map.resize(X, std::vector<int>(Y));
+        int j = 0;
         for (auto& fieldLine : fields) {
             std::getline(input, line);
             std::copy(line.begin(), line.begin() + Y, fieldLine.begin());
+            for(int i = 0; i < fieldLine.size(); ++i) {
+                if(fieldLine[i] == 'F' || fieldLine[i] == 'G') {
+                    map[j][i] = 1;
+                } else {
+                    map[j][i] = 0;
+                }
+                
+                if(fieldLine[i] == '+') {
+                    std::pair<int,int> b;
+                    b.first = j;
+                    b.second = i;
+                    boosters.push_back(b);
+                } else if(fieldLine[i] == '.') {
+                    std::pair<int,int> f;
+                    f.first = j;
+                    f.second = i;
+                    foods.push_back(f);
+                }
+            }
+            ++j;
         }
         
         pacmans.resize(pacmanCount);
         for (auto& pacman : pacmans) {
             std::getline(input, line);
             std::stringstream ss(line);
+            std::stringstream ss2(line);
             while(std::getline(ss, line, ' '))
                 pacman.push_back(line);
+                
+            pm_struct p;
+            std::getline(ss2, line, ' ');
+            p.id = std::stoi(line);
+            std::getline(ss2, line, ' ');
+            p.name = line;
+            std::getline(ss2, line, ' ');
+            p.y = std::stoi(line);
+            std::getline(ss2, line, ' ');
+            p.x = std::stoi(line);
+            std::getline(ss2, line, ' ');
+            p.fast = std::stoi(line);
+            std::getline(ss2, line, ' ');
+            p.points = std::stoi(line);
+            std::getline(ss2, line, ' ');
+            p.extra_points = line;
+            std::getline(ss2, line, ' ');
+            p.prev_actions = line;
+            pacman_vector.push_back(p);
         }
 
         ghosts.resize(ghostCount);
